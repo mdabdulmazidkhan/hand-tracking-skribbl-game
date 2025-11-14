@@ -8,7 +8,7 @@ export function detectPinch(landmarks: Array<{ x: number; y: number; z: number }
   );
 
   // Very tight pinch - fingers must be very close together
-  return distance < 0.042;
+  return distance < 0.043;
 }
 
 export function isPointerNear(
