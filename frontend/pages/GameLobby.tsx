@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useHandPointers } from "../hooks/useHandTracking";
-import { isPointerNear } from "../utils/gestures";
 import HandCursor from "../components/HandCursor";
+import DrawingCanvas from "../components/DrawingCanvas";
 import backend from "~backend/client";
-import type { HandLandmarks, Player, ServerMessage } from "../types";
+import type { HandLandmarks, Player, ServerMessage, DrawStroke } from "../types";
 import { useToast } from "@/components/ui/use-toast";
 
 interface GameLobbyProps {
@@ -24,6 +24,7 @@ export default function GameLobby({
   const [players, setPlayers] = useState<Player[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
+  const [practiceStrokes, setPracticeStrokes] = useState<DrawStroke[]>([]);
   const streamRef = useRef<any>(null);
   const readyButtonRef = useRef<HTMLButtonElement>(null);
   const pointers = useHandPointers(hands);
@@ -95,29 +96,37 @@ export default function GameLobby({
     }
   };
 
+  const handlePracticeStroke = (stroke: DrawStroke) => {
+    setPracticeStrokes((prev) => [...prev, stroke]);
+  };
+
+  const handleClearPractice = () => {
+    setPracticeStrokes([]);
+  };
+
   return (
-    <div className="h-full w-full flex items-center justify-center p-4 bg-[#f0f0f0]">
+    <div className="h-full w-full flex bg-[#f0f0f0] p-2 gap-2">
       {pointers.map((pointer, index) => (
         <HandCursor key={index} pointer={pointer} />
       ))}
 
-      <div className="max-w-2xl w-full space-y-4">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl mb-2 text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+      <div className="w-64 flex-shrink-0 bg-white border-4 border-black p-4 space-y-4">
+        <div className="text-center">
+          <h2 className="text-xl mb-2 text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
             LOBBY
           </h2>
-          <div className="bg-white border-4 border-black p-4 inline-block">
+          <div className="bg-[#f0f0f0] border-3 border-black p-3">
             <p className="text-xs text-gray-600" style={{ fontFamily: "'Press Start 2P', cursive" }}>
               CODE:
             </p>
-            <p className="text-3xl text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+            <p className="text-2xl text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
               {roomCode}
             </p>
           </div>
         </div>
 
-        <div className="bg-white border-4 border-black p-4 space-y-3">
-          <h3 className="text-xs mb-2 text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+        <div className="space-y-3">
+          <h3 className="text-xs text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
             PLAYERS ({players.length})
           </h3>
           
@@ -125,11 +134,11 @@ export default function GameLobby({
             {players.map((player) => (
               <div
                 key={player.id}
-                className={`p-3 border-3 border-black flex items-center justify-between ${
+                className={`p-2 border-3 border-black flex items-center justify-between ${
                   player.isReady ? "bg-[#4CAF50] text-white" : "bg-white text-black"
                 }`}
               >
-                <span className="text-xs" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+                <span className="text-xs truncate" style={{ fontFamily: "'Press Start 2P', cursive" }}>
                   {player.username}
                 </span>
                 {player.isReady && (
@@ -145,7 +154,7 @@ export default function GameLobby({
             ref={readyButtonRef}
             onClick={handleReady}
             disabled={isReady}
-            className={`w-full py-4 border-4 border-black text-xs active:translate-x-0.5 active:translate-y-0.5 transition-all ${
+            className={`w-full py-3 border-4 border-black text-xs active:translate-x-0.5 active:translate-y-0.5 transition-all ${
               isReady
                 ? "bg-[#4CAF50] text-white cursor-not-allowed"
                 : hoveredElement === "ready"
@@ -157,10 +166,42 @@ export default function GameLobby({
             {isReady ? "READY!" : "READY?"}
           </button>
 
-          <p className="text-center text-gray-600 text-xs pt-2" style={{ fontFamily: "'Press Start 2P', cursive" }}>
-            Wait for players...
+          {players.length < 2 && (
+            <p className="text-center text-gray-600 text-xs pt-2" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+              Need 2+ players
+            </p>
+          )}
+          {players.length >= 2 && !isReady && (
+            <p className="text-center text-gray-600 text-xs pt-2" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+              Click ready!
+            </p>
+          )}
+          {isReady && (
+            <p className="text-center text-gray-600 text-xs pt-2" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+              Waiting...
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col gap-2">
+        <div className="bg-white border-3 border-black p-3 text-center">
+          <h3 className="text-sm text-black mb-1" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+            PRACTICE MODE
+          </h3>
+          <p className="text-xs text-gray-600" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+            Draw while waiting for players
           </p>
         </div>
+
+        <DrawingCanvas
+          hands={pointers}
+          strokes={practiceStrokes}
+          isDrawing={true}
+          onDrawStroke={handlePracticeStroke}
+          onClear={handleClearPractice}
+          playerId={playerId}
+        />
       </div>
     </div>
   );
