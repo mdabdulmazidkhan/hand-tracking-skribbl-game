@@ -11,7 +11,7 @@ interface GameLobbyProps {
   roomCode: string;
   username: string;
   playerId: string;
-  onStartGame: (stream: any) => void;
+  onStartGame: (stream: any, setHandler: any) => void;
 }
 
 export default function GameLobby({
@@ -69,16 +69,27 @@ export default function GameLobby({
     try {
       const stream = await backend.game.stream({ roomCode, playerId, username });
       streamRef.current = stream;
+      let gameStarted = false;
 
       for await (const message of stream) {
+        // Forward message to GameRoom if it's started
+        if (gameStarted) {
+          const handler = (window as any).__gameRoomMessageHandler;
+          if (handler) {
+            handler(message);
+          }
+          continue;
+        }
+
+        // Lobby handling
         if (message.playersUpdate) {
           setPlayers(message.playersUpdate.players);
           const allReady = message.playersUpdate.players.every((p: Player) => p.isReady);
-          if (allReady && message.playersUpdate.players.length >= 2) {
-            // Pass stream to GameRoom - DON'T close it
-            setTimeout(() => onStartGame(stream), 500);
-            // Exit this loop but keep stream alive
-            return;
+          if (allReady && message.playersUpdate.players.length >= 2 && !gameStarted) {
+            gameStarted = true;
+            setTimeout(() => {
+              onStartGame(stream, () => {});
+            }, 500);
           }
         }
       }

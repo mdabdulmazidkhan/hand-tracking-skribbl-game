@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./styles.css";
 import LandingPage from "./pages/LandingPage";
 import GameLobby from "./pages/GameLobby";
 import GameRoom from "./pages/GameRoom";
 import HandTracker from "./components/HandTracker";
 import HandOverlay from "./components/HandOverlay";
-import type { HandLandmarks } from "./types";
+import type { HandLandmarks, ServerMessage } from "./types";
 
 export default function App() {
   const [page, setPage] = useState<"landing" | "lobby" | "game">("landing");
@@ -21,7 +21,7 @@ export default function App() {
     setPage("lobby");
   };
 
-  const handleStartGame = (stream: any) => {
+  const handleStartGame = (stream: any, _setHandler: any) => {
     setGameStream(stream);
     setPage("game");
   };

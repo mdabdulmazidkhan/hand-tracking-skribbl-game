@@ -5,7 +5,6 @@ import DrawingCanvas from "../components/DrawingCanvas";
 import PlayerList from "../components/PlayerList";
 import ChatBox from "../components/ChatBox";
 import VirtualKeyboard from "../components/VirtualKeyboard";
-import backend from "~backend/client";
 import type { HandLandmarks, Player, DrawStroke, ChatMessage, ServerMessage } from "../types";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -22,7 +21,7 @@ export default function GameRoom({
   roomCode,
   username,
   playerId,
-  stream: initialStream,
+  stream,
 }: GameRoomProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentDrawerId, setCurrentDrawerId] = useState<string | null>(null);
@@ -46,9 +45,7 @@ export default function GameRoom({
   const isDrawing = currentDrawerId === playerId;
 
   useEffect(() => {
-    // Receive the stream from lobby and continue consuming it
-    streamRef.current = initialStream;
-    listenToStream(initialStream);
+    streamRef.current = stream;
 
     return () => {
       if (streamRef.current) {
@@ -57,48 +54,53 @@ export default function GameRoom({
     };
   }, []);
 
-  const listenToStream = async (stream: any) => {
-    try {
-      for await (const message of stream) {
-        console.log("GameRoom received message:", message);
-        if (message.playersUpdate) {
-          setPlayers(message.playersUpdate.players);
-        } else if (message.wordSelection) {
-          setWordOptions(message.wordSelection.words);
-        } else if (message.roundStart) {
-          setCurrentDrawerId(message.roundStart.drawerId);
-          setWordHint(message.roundStart.wordHint);
-          setWordOptions([]);
-          setStrokes([]);
-          setTimeRemaining(message.roundStart.duration / 1000);
-          const interval = setInterval(() => {
-            setTimeRemaining((prev) => Math.max(0, prev - 1));
-          }, 1000);
-          setTimeout(() => clearInterval(interval), message.roundStart.duration);
-        } else if (message.draw) {
-          setStrokes((prev) => [...prev, message.draw!.stroke]);
-        } else if (message.chat) {
-          setMessages((prev) => [...prev, message.chat!.message]);
-        } else if (message.clearCanvas) {
-          setStrokes([]);
-        } else if (message.correctGuess) {
-          toast({
-            title: `${message.correctGuess.username} guessed!`,
-            className: "bg-green-500 text-white",
-          });
-        } else if (message.roundEnd) {
-          toast({ title: `Word: ${message.roundEnd.word}` });
-        } else if (message.gameEnd) {
-          setGameEnded(true);
-          setFinalScores(message.gameEnd.finalScores);
-          toast({ title: "Game Over!" });
-        }
+  // This component will receive messages via the parent's gameMessageHandler
+  // which is called from GameLobby's message loop
+  useEffect(() => {
+    // Export our message handler to parent via a global callback pattern
+    const handler = (message: ServerMessage) => {
+      console.log("GameRoom received message:", message);
+      if (message.playersUpdate) {
+        setPlayers(message.playersUpdate.players);
+      } else if (message.wordSelection) {
+        setWordOptions(message.wordSelection.words);
+      } else if (message.roundStart) {
+        setCurrentDrawerId(message.roundStart.drawerId);
+        setWordHint(message.roundStart.wordHint);
+        setWordOptions([]);
+        setStrokes([]);
+        setTimeRemaining(message.roundStart.duration / 1000);
+        const interval = setInterval(() => {
+          setTimeRemaining((prev) => Math.max(0, prev - 1));
+        }, 1000);
+        setTimeout(() => clearInterval(interval), message.roundStart.duration);
+      } else if (message.draw) {
+        setStrokes((prev) => [...prev, message.draw!.stroke]);
+      } else if (message.chat) {
+        setMessages((prev) => [...prev, message.chat!.message]);
+      } else if (message.clearCanvas) {
+        setStrokes([]);
+      } else if (message.correctGuess) {
+        toast({
+          title: `${message.correctGuess.username} guessed!`,
+          className: "bg-green-500 text-white",
+        });
+      } else if (message.roundEnd) {
+        toast({ title: `Word: ${message.roundEnd.word}` });
+      } else if (message.gameEnd) {
+        setGameEnded(true);
+        setFinalScores(message.gameEnd.finalScores);
+        toast({ title: "Game Over!" });
       }
-    } catch (err) {
-      console.error("Stream error:", err);
-      toast({ title: "Connection lost", variant: "destructive" });
-    }
-  };
+    };
+
+    // Store handler in window for GameLobby to call
+    (window as any).__gameRoomMessageHandler = handler;
+
+    return () => {
+      delete (window as any).__gameRoomMessageHandler;
+    };
+  }, []);
 
   // Handle word selection gestures
   useEffect(() => {
