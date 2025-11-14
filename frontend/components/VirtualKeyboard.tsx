@@ -21,11 +21,11 @@ export default function VirtualKeyboard({ hands, onInput, initialValue = "" }: V
 
   useEffect(() => {
     setValue(initialValue);
-  }, [initialValue]);
+  }, []);
 
   useEffect(() => {
     onInput(value);
-  }, [value, onInput]);
+  }, [value]);
 
   useEffect(() => {
     hands.forEach((pointer, index) => {

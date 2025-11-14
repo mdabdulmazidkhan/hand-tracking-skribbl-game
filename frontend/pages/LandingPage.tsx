@@ -36,45 +36,48 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
       const wasPinching = lastPinchState[handKey];
       const isPinching = pointer.isPinching;
 
-      // Check hover state for all elements
-      if (createButtonRef.current && username) {
-        const rect = createButtonRef.current.getBoundingClientRect();
-        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
-          currentHover = "create";
-          if (!wasPinching && isPinching) {
-            handleCreate();
+      // Skip hover detection when keyboard is open
+      if (!showUsernameKeyboard && !showRoomKeyboard) {
+        // Check hover state for all elements
+        if (createButtonRef.current && username) {
+          const rect = createButtonRef.current.getBoundingClientRect();
+          if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+            currentHover = "create";
+            if (!wasPinching && isPinching) {
+              handleCreate();
+            }
           }
         }
-      }
 
-      if (joinButtonRef.current && username && roomCode) {
-        const rect = joinButtonRef.current.getBoundingClientRect();
-        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
-          currentHover = "join";
-          if (!wasPinching && isPinching) {
-            handleJoin();
+        if (joinButtonRef.current && username && roomCode) {
+          const rect = joinButtonRef.current.getBoundingClientRect();
+          if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+            currentHover = "join";
+            if (!wasPinching && isPinching) {
+              handleJoin();
+            }
           }
         }
-      }
 
-      if (usernameInputRef.current) {
-        const rect = usernameInputRef.current.getBoundingClientRect();
-        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
-          currentHover = "username";
-          if (!wasPinching && isPinching) {
-            setShowUsernameKeyboard(true);
-            setShowRoomKeyboard(false);
+        if (usernameInputRef.current) {
+          const rect = usernameInputRef.current.getBoundingClientRect();
+          if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+            currentHover = "username";
+            if (!wasPinching && isPinching) {
+              setShowUsernameKeyboard(true);
+              setShowRoomKeyboard(false);
+            }
           }
         }
-      }
 
-      if (roomInputRef.current) {
-        const rect = roomInputRef.current.getBoundingClientRect();
-        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
-          currentHover = "room";
-          if (!wasPinching && isPinching) {
-            setShowRoomKeyboard(true);
-            setShowUsernameKeyboard(false);
+        if (roomInputRef.current) {
+          const rect = roomInputRef.current.getBoundingClientRect();
+          if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+            currentHover = "room";
+            if (!wasPinching && isPinching) {
+              setShowRoomKeyboard(true);
+              setShowUsernameKeyboard(false);
+            }
           }
         }
       }
@@ -83,7 +86,7 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
     });
 
     setHoveredElement(currentHover);
-  }, [pointers, username, roomCode]);
+  }, [pointers, username, roomCode, showUsernameKeyboard, showRoomKeyboard]);
 
   const handleCreate = async () => {
     try {
