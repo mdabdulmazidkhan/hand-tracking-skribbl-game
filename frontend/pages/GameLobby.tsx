@@ -75,7 +75,10 @@ export default function GameLobby({
           setPlayers(message.playersUpdate.players);
           const allReady = message.playersUpdate.players.every((p: Player) => p.isReady);
           if (allReady && message.playersUpdate.players.length >= 2) {
-            setTimeout(() => onStartGame(), 1000);
+            // Close stream before transitioning
+            await stream.close();
+            setTimeout(() => onStartGame(), 500);
+            break;
           }
         }
       }
