@@ -32,6 +32,7 @@ export default function DrawingCanvas({
   const colorButtonsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
   const sizeButtonsRef = useRef<Map<number, HTMLButtonElement>>(new Map());
   const clearButtonRef = useRef<HTMLButtonElement>(null);
+  const undoButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     redrawCanvas();
@@ -80,6 +81,16 @@ export default function DrawingCanvas({
         }
       }
 
+      if (undoButtonRef.current) {
+        const rect = undoButtonRef.current.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = "undo";
+          if (!wasPinching && isPinching) {
+            handleUndo();
+          }
+        }
+      }
+
       // Drawing on canvas
       if (isPinching && canvasRef.current) {
         const rect = canvasRef.current.getBoundingClientRect();
@@ -112,6 +123,16 @@ export default function DrawingCanvas({
 
     setHoveredTool(currentHover);
   }, [hands, isDrawing, currentColor, currentSize, isCurrentlyDrawing, currentStroke]);
+
+  const handleUndo = () => {
+    if (strokes.length > 0) {
+      const newStrokes = strokes.slice(0, -1);
+      // We need to propagate this through the parent component
+      // For now, we'll clear the canvas and redraw without the last stroke
+      onClear();
+      newStrokes.forEach((stroke) => onDrawStroke(stroke));
+    }
+  };
 
   const redrawCanvas = () => {
     const canvas = canvasRef.current;
@@ -211,14 +232,26 @@ export default function DrawingCanvas({
           <div className="w-px h-8 bg-black" />
 
           <button
-            ref={clearButtonRef}
-            onClick={onClear}
-            className={`px-2 py-1 border-2 border-black bg-[#f44336] text-white text-xs hover:bg-[#d32f2f] transition-transform ${
-              hoveredTool === "clear" ? "scale-110" : ""
+            ref={undoButtonRef}
+            onClick={handleUndo}
+            disabled={strokes.length === 0}
+            className={`px-3 py-1 border-3 border-black bg-[#FF9800] text-white text-xs hover:bg-[#F57C00] transition-all disabled:bg-gray-300 disabled:cursor-not-allowed ${
+              hoveredTool === "undo" && strokes.length > 0 ? "scale-110 shadow-lg" : ""
             }`}
             style={{ fontFamily: "'Press Start 2P', cursive" }}
           >
-            CLR
+            UNDO
+          </button>
+
+          <button
+            ref={clearButtonRef}
+            onClick={onClear}
+            className={`px-3 py-1 border-3 border-black bg-[#f44336] text-white text-xs hover:bg-[#d32f2f] transition-all ${
+              hoveredTool === "clear" ? "scale-110 shadow-lg" : ""
+            }`}
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
+          >
+            CLR ALL
           </button>
         </div>
       )}
