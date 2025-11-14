@@ -41,17 +41,18 @@ export default function HandCursor({ pointer }: HandCursorProps) {
         {/* Pinch indicator */}
         {pointer.isPinching && (
           <div className="absolute -top-1 -right-1">
-            <svg width="12" height="12" viewBox="0 0 8 8" style={{ imageRendering: "pixelated" }}>
-              <rect x="2" y="2" width="4" height="4" fill="#FFEB3B" stroke="#000" strokeWidth="0.5" />
-              <rect x="3" y="3" width="2" height="2" fill="#FFF9C4" />
+            <svg width="16" height="16" viewBox="0 0 8 8" style={{ imageRendering: "pixelated" }}>
+              <rect x="1" y="1" width="6" height="6" fill="#FFEB3B" stroke="#000" strokeWidth="0.5" />
+              <rect x="2" y="2" width="4" height="4" fill="#FFF9C4" />
             </svg>
           </div>
         )}
         
-        {/* Click effect */}
+        {/* Click effect - larger and more visible */}
         {pointer.isPinching && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-yellow-400 rounded-full animate-ping opacity-75" style={{ borderStyle: "dashed" }} />
+            <div className="w-16 h-16 border-4 border-yellow-400 rounded-full animate-ping opacity-100" style={{ borderStyle: "solid" }} />
+            <div className="absolute w-12 h-12 bg-yellow-300 rounded-full opacity-50 animate-pulse" />
           </div>
         )}
       </div>

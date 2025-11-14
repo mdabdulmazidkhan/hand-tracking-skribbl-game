@@ -52,8 +52,8 @@ export default function DrawingCanvas({
       const lastClick = lastClickTime[handKey] || 0;
       const timeSinceLastClick = now - lastClick;
 
-      // Debounce clicks - minimum 300ms between clicks
-      const canClick = !wasPinching && isPinching && timeSinceLastClick > 300;
+      // Debounce clicks - minimum 100ms between clicks
+      const canClick = !wasPinching && isPinching && timeSinceLastClick > 100;
 
       // Check if hovering over tools
       colorButtonsRef.current.forEach((button, color) => {

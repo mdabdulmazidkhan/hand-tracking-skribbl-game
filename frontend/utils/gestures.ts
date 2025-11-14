@@ -7,7 +7,8 @@ export function detectPinch(landmarks: Array<{ x: number; y: number; z: number }
     Math.pow(thumb.y - index.y, 2)
   );
 
-  return distance < 0.12;
+  // Very sensitive - triggers as soon as fingers are close
+  return distance < 0.15;
 }
 
 export function isPointerNear(
