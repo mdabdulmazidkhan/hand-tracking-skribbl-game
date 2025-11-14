@@ -249,15 +249,6 @@ export default function GameRoom({
       </div>
 
       <div className="flex-1 flex flex-col gap-2">
-        <div className="bg-white border-3 border-black p-2 flex items-center justify-between">
-          <div className="text-xs text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
-            {isDrawing ? `DRAW` : wordHint}
-          </div>
-          <div className="text-sm text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
-            {timeRemaining}s
-          </div>
-        </div>
-
         {wordOptions.length > 0 && isDrawing && (
           <div className="bg-white border-3 border-black p-3">
             <h3 className="text-xs mb-3 text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
@@ -311,6 +302,28 @@ export default function GameRoom({
           onClear={handleClearCanvas}
           playerId={playerId}
         />
+
+        {/* Timer Popup */}
+        {timeRemaining > 0 && (
+          <div className="fixed top-4 right-1/2 translate-x-1/2 z-50">
+            <div className="w-20 h-20 rounded-full bg-white border-4 border-black flex items-center justify-center shadow-2xl">
+              <span className="text-2xl text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+                {timeRemaining}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Word Hint Popup (for guessers) */}
+        {!isDrawing && wordHint && (
+          <div className="fixed top-24 right-1/2 translate-x-1/2 z-50">
+            <div className="bg-white border-4 border-black px-6 py-3 shadow-2xl">
+              <span className="text-lg text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+                {wordHint}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="w-64 flex-shrink-0">
