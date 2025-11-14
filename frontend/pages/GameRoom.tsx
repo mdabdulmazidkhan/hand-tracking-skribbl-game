@@ -60,6 +60,7 @@ export default function GameRoom({
   const listenToStream = async (stream: any) => {
     try {
       for await (const message of stream) {
+        console.log("GameRoom received message:", message);
         if (message.playersUpdate) {
           setPlayers(message.playersUpdate.players);
         } else if (message.wordSelection) {
