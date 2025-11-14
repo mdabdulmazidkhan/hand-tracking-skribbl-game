@@ -23,6 +23,7 @@ export default function GameLobby({
 }: GameLobbyProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
   const streamRef = useRef<any>(null);
   const readyButtonRef = useRef<HTMLButtonElement>(null);
   const pointers = useHandPointers(hands);
@@ -40,21 +41,28 @@ export default function GameLobby({
   }, []);
 
   useEffect(() => {
+    let currentHover: string | null = null;
+
     pointers.forEach((pointer, index) => {
       const handKey = `hand-${index}`;
       const wasPinching = lastPinchState[handKey];
       const isPinching = pointer.isPinching;
 
-      if (!wasPinching && isPinching && readyButtonRef.current) {
+      if (readyButtonRef.current && !isReady) {
         const rect = readyButtonRef.current.getBoundingClientRect();
-        if (isPointerNear(pointer.x, pointer.y, rect.left + rect.width / 2, rect.top + rect.height / 2, 80)) {
-          handleReady();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = "ready";
+          if (!wasPinching && isPinching) {
+            handleReady();
+          }
         }
       }
 
       setLastPinchState((prev) => ({ ...prev, [handKey]: isPinching }));
     });
-  }, [pointers]);
+
+    setHoveredElement(currentHover);
+  }, [pointers, isReady]);
 
   const connectToGame = async () => {
     try {
@@ -137,10 +145,12 @@ export default function GameLobby({
             ref={readyButtonRef}
             onClick={handleReady}
             disabled={isReady}
-            className={`w-full py-4 border-4 border-black text-xs ${
+            className={`w-full py-4 border-4 border-black text-xs active:translate-x-0.5 active:translate-y-0.5 transition-all ${
               isReady
                 ? "bg-[#4CAF50] text-white cursor-not-allowed"
-                : "bg-[#2196F3] text-white hover:bg-[#1976D2] active:translate-x-0.5 active:translate-y-0.5"
+                : hoveredElement === "ready"
+                ? "bg-[#42A5F5] text-white scale-105 shadow-lg"
+                : "bg-[#2196F3] text-white"
             }`}
             style={{ fontFamily: "'Press Start 2P', cursive" }}
           >

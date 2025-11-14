@@ -4,11 +4,10 @@ export function detectPinch(landmarks: Array<{ x: number; y: number; z: number }
 
   const distance = Math.sqrt(
     Math.pow(thumb.x - index.x, 2) +
-    Math.pow(thumb.y - index.y, 2) +
-    Math.pow(thumb.z - index.z, 2)
+    Math.pow(thumb.y - index.y, 2)
   );
 
-  return distance < 0.05;
+  return distance < 0.08;
 }
 
 export function isPointerNear(

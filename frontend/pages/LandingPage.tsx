@@ -17,6 +17,7 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
   const [roomCode, setRoomCode] = useState("");
   const [showUsernameKeyboard, setShowUsernameKeyboard] = useState(false);
   const [showRoomKeyboard, setShowRoomKeyboard] = useState(false);
+  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
 
   const pointers = useHandPointers(hands);
   const createButtonRef = useRef<HTMLButtonElement>(null);
@@ -28,37 +29,50 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
   const { toast } = useToast();
 
   useEffect(() => {
+    let currentHover: string | null = null;
+
     pointers.forEach((pointer, index) => {
       const handKey = `hand-${index}`;
       const wasPinching = lastPinchState[handKey];
       const isPinching = pointer.isPinching;
 
-      if (!wasPinching && isPinching) {
-        if (createButtonRef.current && username) {
-          const rect = createButtonRef.current.getBoundingClientRect();
-          if (isPointerNear(pointer.x, pointer.y, rect.left + rect.width / 2, rect.top + rect.height / 2, 80)) {
+      // Check hover state for all elements
+      if (createButtonRef.current && username) {
+        const rect = createButtonRef.current.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = "create";
+          if (!wasPinching && isPinching) {
             handleCreate();
           }
         }
+      }
 
-        if (joinButtonRef.current && username && roomCode) {
-          const rect = joinButtonRef.current.getBoundingClientRect();
-          if (isPointerNear(pointer.x, pointer.y, rect.left + rect.width / 2, rect.top + rect.height / 2, 80)) {
+      if (joinButtonRef.current && username && roomCode) {
+        const rect = joinButtonRef.current.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = "join";
+          if (!wasPinching && isPinching) {
             handleJoin();
           }
         }
+      }
 
-        if (usernameInputRef.current) {
-          const rect = usernameInputRef.current.getBoundingClientRect();
-          if (isPointerNear(pointer.x, pointer.y, rect.left + rect.width / 2, rect.top + rect.height / 2, 100)) {
+      if (usernameInputRef.current) {
+        const rect = usernameInputRef.current.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = "username";
+          if (!wasPinching && isPinching) {
             setShowUsernameKeyboard(true);
             setShowRoomKeyboard(false);
           }
         }
+      }
 
-        if (roomInputRef.current) {
-          const rect = roomInputRef.current.getBoundingClientRect();
-          if (isPointerNear(pointer.x, pointer.y, rect.left + rect.width / 2, rect.top + rect.height / 2, 100)) {
+      if (roomInputRef.current) {
+        const rect = roomInputRef.current.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = "room";
+          if (!wasPinching && isPinching) {
             setShowRoomKeyboard(true);
             setShowUsernameKeyboard(false);
           }
@@ -67,6 +81,8 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
 
       setLastPinchState((prev) => ({ ...prev, [handKey]: isPinching }));
     });
+
+    setHoveredElement(currentHover);
   }, [pointers, username, roomCode]);
 
   const handleCreate = async () => {
@@ -112,7 +128,9 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
             </label>
             <div
               ref={usernameInputRef}
-              className="w-full p-3 border-3 border-black bg-white text-sm cursor-pointer"
+              className={`w-full p-3 border-3 border-black text-sm cursor-pointer transition-all ${
+                hoveredElement === "username" ? "bg-yellow-200 scale-105" : "bg-white"
+              }`}
               style={{ fontFamily: "'Press Start 2P', cursive" }}
               onClick={() => {
                 setShowUsernameKeyboard(true);
@@ -129,7 +147,9 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
             </label>
             <div
               ref={roomInputRef}
-              className="w-full p-3 border-3 border-black bg-white text-sm cursor-pointer"
+              className={`w-full p-3 border-3 border-black text-sm cursor-pointer transition-all ${
+                hoveredElement === "room" ? "bg-yellow-200 scale-105" : "bg-white"
+              }`}
               style={{ fontFamily: "'Press Start 2P', cursive" }}
               onClick={() => {
                 setShowRoomKeyboard(true);
@@ -145,7 +165,9 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
               ref={createButtonRef}
               onClick={handleCreate}
               disabled={!username}
-              className="flex-1 py-3 border-4 border-black bg-[#4CAF50] text-white text-xs disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-[#45a049] active:translate-x-0.5 active:translate-y-0.5"
+              className={`flex-1 py-3 border-4 border-black text-white text-xs disabled:bg-gray-300 disabled:cursor-not-allowed active:translate-x-0.5 active:translate-y-0.5 transition-all ${
+                hoveredElement === "create" && username ? "bg-[#66BB6A] scale-105 shadow-lg" : "bg-[#4CAF50]"
+              }`}
               style={{ fontFamily: "'Press Start 2P', cursive" }}
             >
               CREATE
@@ -154,7 +176,9 @@ export default function LandingPage({ hands, onJoinRoom }: LandingPageProps) {
               ref={joinButtonRef}
               onClick={handleJoin}
               disabled={!username || !roomCode}
-              className="flex-1 py-3 border-4 border-black bg-[#2196F3] text-white text-xs disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-[#1976D2] active:translate-x-0.5 active:translate-y-0.5"
+              className={`flex-1 py-3 border-4 border-black text-white text-xs disabled:bg-gray-300 disabled:cursor-not-allowed active:translate-x-0.5 active:translate-y-0.5 transition-all ${
+                hoveredElement === "join" && username && roomCode ? "bg-[#42A5F5] scale-105 shadow-lg" : "bg-[#2196F3]"
+              }`}
               style={{ fontFamily: "'Press Start 2P', cursive" }}
             >
               JOIN
