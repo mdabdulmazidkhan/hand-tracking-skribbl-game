@@ -228,8 +228,7 @@ export default function DrawingCanvas({
 
   return (
     <div className="flex-1 bg-white border-3 border-black p-2 flex flex-col">
-      {isDrawing && (
-        <div className="flex gap-2 mb-2 items-center">
+      <div className="flex gap-2 mb-2 items-center">
           <div className="flex gap-1">
             {colors.map((color) => (
               <button
@@ -296,8 +295,7 @@ export default function DrawingCanvas({
           >
             CLR ALL
           </button>
-        </div>
-      )}
+      </div>
 
       <div className="flex-1 relative bg-white border-2 border-black overflow-hidden">
         <canvas
