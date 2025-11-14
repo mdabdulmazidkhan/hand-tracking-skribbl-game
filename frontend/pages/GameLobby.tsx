@@ -74,12 +74,9 @@ export default function GameLobby({
       for await (const message of stream) {
         // Forward message to GameRoom if it's started
         if (gameStarted) {
-          console.log("Lobby forwarding message to GameRoom:", message);
           const handler = (window as any).__gameRoomMessageHandler;
           if (handler) {
             handler(message);
-          } else {
-            console.warn("GameRoom handler not registered yet!");
           }
           continue;
         }
@@ -90,21 +87,8 @@ export default function GameLobby({
           const allReady = message.playersUpdate.players.every((p: Player) => p.isReady);
           if (allReady && message.playersUpdate.players.length >= 2 && !gameStarted) {
             gameStarted = true;
-            console.log("All players ready! Starting game...");
-            // Transition to game room
             setTimeout(() => {
               onStartGame(stream, () => {});
-              // Wait for GameRoom to mount and register handler
-              setTimeout(() => {
-                console.log("Attempting to send initial playersUpdate to GameRoom");
-                const handler = (window as any).__gameRoomMessageHandler;
-                if (handler) {
-                  console.log("Handler found, forwarding playersUpdate");
-                  handler(message);
-                } else {
-                  console.warn("Handler NOT found!");
-                }
-              }, 100);
             }, 500);
           }
         }
