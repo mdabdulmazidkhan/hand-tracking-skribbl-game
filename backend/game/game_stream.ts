@@ -33,8 +33,8 @@ interface ServerMessage {
   correctGuess?: CorrectGuessMessage;
 }
 
-const ROUND_DURATION = 80000;
-const WORD_SELECTION_DURATION = 10000;
+const ROUND_DURATION = 180000; // 3 minutes
+const WORD_SELECTION_DURATION = 15000; // 15 seconds to choose
 
 export const stream = api.streamInOut<GameHandshake, ClientMessage, ServerMessage>(
   { expose: true, path: "/game/stream" },
@@ -120,7 +120,7 @@ async function handleClientMessage(
 
     if (isCorrectGuess) {
       room.guessedPlayers.add(playerId);
-      player.score += Math.max(100 - room.guessedPlayers.size * 10, 10);
+      player.score += 10;
 
       await broadcastToRoom(roomCode, {
         correctGuess: {
@@ -130,25 +130,28 @@ async function handleClientMessage(
         },
       });
 
+      await sendPlayersUpdate(roomCode);
+
       if (room.guessedPlayers.size === room.players.size - 1) {
         await endRound(roomCode);
       }
+    } else {
+      // Only send chat message if it's NOT a correct guess
+      const chatMessage: ChatMessage = {
+        playerId,
+        username: player.username,
+        message: message.chat.message,
+        timestamp: Date.now(),
+        isCorrectGuess: undefined,
+      };
+
+      await broadcastToRoom(roomCode, {
+        chat: {
+          type: "chat",
+          message: chatMessage,
+        },
+      });
     }
-
-    const chatMessage: ChatMessage = {
-      playerId,
-      username: player.username,
-      message: isCorrectGuess ? "guessed the word!" : message.chat.message,
-      timestamp: Date.now(),
-      isCorrectGuess: isCorrectGuess ? true : undefined,
-    };
-
-    await broadcastToRoom(roomCode, {
-      chat: {
-        type: "chat",
-        message: chatMessage,
-      },
-    });
   } else if (message.selectWord) {
     if (room.currentDrawerId === playerId && room.gameState === "word_selection") {
       room.currentWord = message.selectWord.word;
