@@ -31,8 +31,8 @@ export default function HandTracker({ onHandsDetected }: HandTrackerProps) {
         hands.setOptions({
           maxNumHands: 2,
           modelComplexity: 1,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5,
+          minDetectionConfidence: 0.7,
+          minTrackingConfidence: 0.7,
         });
 
         hands.onResults((results) => {
