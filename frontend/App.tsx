@@ -13,6 +13,7 @@ export default function App() {
   const [roomCode, setRoomCode] = useState("");
   const [playerId] = useState(() => Math.random().toString(36).substring(2, 15));
   const [hands, setHands] = useState<HandLandmarks[]>([]);
+  const [gameStream, setGameStream] = useState<any>(null);
 
   const handleJoinRoom = (code: string, user: string) => {
     setRoomCode(code);
@@ -20,7 +21,8 @@ export default function App() {
     setPage("lobby");
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = (stream: any) => {
+    setGameStream(stream);
     setPage("game");
   };
 
@@ -43,12 +45,13 @@ export default function App() {
         />
       )}
 
-      {page === "game" && (
+      {page === "game" && gameStream && (
         <GameRoom
           hands={hands}
           roomCode={roomCode}
           username={username}
           playerId={playerId}
+          stream={gameStream}
         />
       )}
     </div>
