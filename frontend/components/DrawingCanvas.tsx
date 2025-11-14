@@ -26,6 +26,7 @@ export default function DrawingCanvas({
   const [currentSize, setCurrentSize] = useState(5);
   const [isCurrentlyDrawing, setIsCurrentlyDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<Array<{ x: number; y: number }>>([]);
+  const lastDrawnPointRef = useRef<{ x: number; y: number } | null>(null);
   const [lastPinchState, setLastPinchState] = useState<Record<string, boolean>>({});
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
   const [lastClickTime, setLastClickTime] = useState<Record<string, number>>({});
@@ -112,8 +113,20 @@ export default function DrawingCanvas({
           if (!isCurrentlyDrawing) {
             setIsCurrentlyDrawing(true);
             setCurrentStroke([{ x: canvasX, y: canvasY }]);
+            lastDrawnPointRef.current = { x: canvasX, y: canvasY };
           } else {
-            setCurrentStroke((prev) => [...prev, { x: canvasX, y: canvasY }]);
+            // Only add point if it's far enough from the last point (smooth drawing)
+            const lastPoint = lastDrawnPointRef.current;
+            if (lastPoint) {
+              const distance = Math.sqrt(
+                Math.pow(canvasX - lastPoint.x, 2) + Math.pow(canvasY - lastPoint.y, 2)
+              );
+              // Only add point if moved at least 3 pixels
+              if (distance >= 3) {
+                setCurrentStroke((prev) => [...prev, { x: canvasX, y: canvasY }]);
+                lastDrawnPointRef.current = { x: canvasX, y: canvasY };
+              }
+            }
           }
         }
       } else if (!isPinching && isCurrentlyDrawing) {
@@ -127,6 +140,7 @@ export default function DrawingCanvas({
         }
         setIsCurrentlyDrawing(false);
         setCurrentStroke([]);
+        lastDrawnPointRef.current = null;
       }
 
       setLastPinchState((prev) => ({ ...prev, [handKey]: isPinching }));
@@ -163,11 +177,20 @@ export default function DrawingCanvas({
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
+      // Use quadratic curves for smoother lines
       ctx.beginPath();
       ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
 
-      for (let i = 1; i < stroke.points.length; i++) {
-        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+      for (let i = 1; i < stroke.points.length - 1; i++) {
+        const xc = (stroke.points[i].x + stroke.points[i + 1].x) / 2;
+        const yc = (stroke.points[i].y + stroke.points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(stroke.points[i].x, stroke.points[i].y, xc, yc);
+      }
+
+      // For the last point
+      if (stroke.points.length > 1) {
+        const lastPoint = stroke.points[stroke.points.length - 1];
+        ctx.lineTo(lastPoint.x, lastPoint.y);
       }
 
       ctx.stroke();
@@ -179,11 +202,20 @@ export default function DrawingCanvas({
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
+      // Use quadratic curves for smoother lines
       ctx.beginPath();
       ctx.moveTo(currentStroke[0].x, currentStroke[0].y);
 
-      for (let i = 1; i < currentStroke.length; i++) {
-        ctx.lineTo(currentStroke[i].x, currentStroke[i].y);
+      for (let i = 1; i < currentStroke.length - 1; i++) {
+        const xc = (currentStroke[i].x + currentStroke[i + 1].x) / 2;
+        const yc = (currentStroke[i].y + currentStroke[i + 1].y) / 2;
+        ctx.quadraticCurveTo(currentStroke[i].x, currentStroke[i].y, xc, yc);
+      }
+
+      // For the last point
+      if (currentStroke.length > 1) {
+        const lastPoint = currentStroke[currentStroke.length - 1];
+        ctx.lineTo(lastPoint.x, lastPoint.y);
       }
 
       ctx.stroke();
