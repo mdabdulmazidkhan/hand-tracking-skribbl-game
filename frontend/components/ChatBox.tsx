@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from "react";
-import { Send } from "lucide-react";
 import type { HandPointer, ChatMessage } from "../types";
 import VirtualKeyboard from "./VirtualKeyboard";
 import { isPointerNear } from "../utils/gestures";
@@ -59,21 +58,23 @@ export default function ChatBox({ hands, messages, onSendMessage, disabled }: Ch
   };
 
   return (
-    <div className="h-full bg-white rounded-2xl shadow-xl p-6 flex flex-col">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Chat</h2>
+    <div className="h-full bg-white border-3 border-black p-3 flex flex-col">
+      <h2 className="text-xs mb-3 text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+        CHAT
+      </h2>
 
-      <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+      <div className="flex-1 overflow-y-auto space-y-2 mb-3">
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`p-3 rounded-lg ${
-              msg.isCorrectGuess
-                ? "bg-green-100 border-2 border-green-400"
-                : "bg-gray-100"
+            className={`p-2 border-2 border-black ${
+              msg.isCorrectGuess ? "bg-[#4CAF50] text-white" : "bg-[#f0f0f0] text-black"
             }`}
           >
-            <div className="font-bold text-sm text-gray-700">{msg.username}</div>
-            <div className={msg.isCorrectGuess ? "text-green-700 font-bold" : "text-gray-800"}>
+            <div className="text-xs mb-1" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+              {msg.username}:
+            </div>
+            <div className="text-xs" style={{ fontFamily: "'Press Start 2P', cursive" }}>
               {msg.message}
             </div>
           </div>
@@ -86,19 +87,20 @@ export default function ChatBox({ hands, messages, onSendMessage, disabled }: Ch
           <div
             ref={inputRef}
             onClick={() => setShowKeyboard(true)}
-            className="bg-gray-100 rounded-lg p-3 min-h-[50px] text-gray-800 border-2 border-gray-300 cursor-pointer hover:border-blue-400 transition-colors"
+            className="bg-white border-2 border-black p-2 min-h-[40px] text-xs cursor-pointer"
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
           >
-            {input || <span className="text-gray-400">Tap to type...</span>}
+            {input || <span className="text-gray-400">Type...</span>}
           </div>
 
           <button
             ref={sendButtonRef}
             onClick={handleSend}
             disabled={!input.trim()}
-            className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 disabled:scale-100 flex items-center justify-center gap-2"
+            className="w-full py-2 border-3 border-black bg-[#4CAF50] hover:bg-[#45a049] disabled:bg-gray-300 text-white text-xs active:translate-x-0.5 active:translate-y-0.5"
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
           >
-            <Send className="w-5 h-5" />
-            Send
+            SEND
           </button>
         </div>
       )}
@@ -108,9 +110,10 @@ export default function ChatBox({ hands, messages, onSendMessage, disabled }: Ch
           <div className="relative">
             <button
               onClick={() => setShowKeyboard(false)}
-              className="absolute -top-4 -right-4 w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-full font-bold text-xl shadow-lg z-50"
+              className="absolute -top-4 -right-4 w-10 h-10 bg-[#f44336] border-2 border-black text-white text-xl"
+              style={{ fontFamily: "'Press Start 2P', cursive" }}
             >
-              ✕
+              X
             </button>
             <VirtualKeyboard
               hands={hands}

@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState } from "react";
 import type { HandPointer, DrawStroke } from "../types";
-import { Eraser, Trash2 } from "lucide-react";
 import { isPointerNear } from "../utils/gestures";
 
 interface DrawingCanvasProps {
@@ -12,8 +11,8 @@ interface DrawingCanvasProps {
   playerId: string;
 }
 
-const colors = ["#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF"];
-const sizes = [2, 5, 10, 15];
+const colors = ["#000", "#fff", "#f44336", "#4CAF50", "#2196F3", "#FFEB3B", "#FF9800"];
+const sizes = [2, 5, 10];
 
 export default function DrawingCanvas({
   hands,
@@ -24,16 +23,14 @@ export default function DrawingCanvas({
   playerId,
 }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [currentColor, setCurrentColor] = useState("#000000");
+  const [currentColor, setCurrentColor] = useState("#000");
   const [currentSize, setCurrentSize] = useState(5);
-  const [isEraser, setIsEraser] = useState(false);
   const [isCurrentlyDrawing, setIsCurrentlyDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<Array<{ x: number; y: number }>>([]);
   const [lastPinchState, setLastPinchState] = useState<Record<string, boolean>>({});
 
   const colorButtonsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
   const sizeButtonsRef = useRef<Map<number, HTMLButtonElement>>(new Map());
-  const eraserButtonRef = useRef<HTMLButtonElement>(null);
   const clearButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -70,8 +67,8 @@ export default function DrawingCanvas({
           onDrawStroke({
             playerId,
             points: currentStroke,
-            color: isEraser ? "#FFFFFF" : currentColor,
-            width: isEraser ? 20 : currentSize,
+            color: currentColor,
+            width: currentSize,
           });
         }
         setIsCurrentlyDrawing(false);
@@ -80,7 +77,7 @@ export default function DrawingCanvas({
 
       setLastPinchState((prev) => ({ ...prev, [handKey]: isPinching }));
     });
-  }, [hands, isDrawing, currentColor, currentSize, isEraser, isCurrentlyDrawing, currentStroke]);
+  }, [hands, isDrawing, currentColor, currentSize, isCurrentlyDrawing, currentStroke]);
 
   const handleToolClick = (x: number, y: number) => {
     colorButtonsRef.current.forEach((button, color) => {
@@ -88,7 +85,6 @@ export default function DrawingCanvas({
       const rect = button.getBoundingClientRect();
       if (isPointerNear(x, y, rect.left + rect.width / 2, rect.top + rect.height / 2, 30)) {
         setCurrentColor(color);
-        setIsEraser(false);
       }
     });
 
@@ -99,13 +95,6 @@ export default function DrawingCanvas({
         setCurrentSize(size);
       }
     });
-
-    if (eraserButtonRef.current) {
-      const rect = eraserButtonRef.current.getBoundingClientRect();
-      if (isPointerNear(x, y, rect.left + rect.width / 2, rect.top + rect.height / 2, 40)) {
-        setIsEraser(true);
-      }
-    }
 
     if (clearButtonRef.current) {
       const rect = clearButtonRef.current.getBoundingClientRect();
@@ -144,8 +133,8 @@ export default function DrawingCanvas({
     });
 
     if (currentStroke.length > 1) {
-      ctx.strokeStyle = isEraser ? "#FFFFFF" : currentColor;
-      ctx.lineWidth = isEraser ? 20 : currentSize;
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = currentSize;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
@@ -165,33 +154,28 @@ export default function DrawingCanvas({
   }, [currentStroke]);
 
   return (
-    <div className="flex-1 bg-white rounded-2xl shadow-xl p-4 flex flex-col">
+    <div className="flex-1 bg-white border-3 border-black p-2 flex flex-col">
       {isDrawing && (
-        <div className="flex gap-4 mb-4 items-center">
-          <div className="flex gap-2">
+        <div className="flex gap-2 mb-2 items-center">
+          <div className="flex gap-1">
             {colors.map((color) => (
               <button
                 key={color}
                 ref={(el) => {
                   if (el) colorButtonsRef.current.set(color, el);
                 }}
-                onClick={() => {
-                  setCurrentColor(color);
-                  setIsEraser(false);
-                }}
-                className={`w-10 h-10 rounded-full border-4 ${
-                  currentColor === color && !isEraser
-                    ? "border-blue-500 scale-110"
-                    : "border-gray-300"
-                } transition-all hover:scale-110`}
+                onClick={() => setCurrentColor(color)}
+                className={`w-8 h-8 border-2 border-black ${
+                  currentColor === color ? "ring-2 ring-blue-500" : ""
+                }`}
                 style={{ backgroundColor: color }}
               />
             ))}
           </div>
 
-          <div className="w-px h-10 bg-gray-300" />
+          <div className="w-px h-8 bg-black" />
 
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             {sizes.map((size) => (
               <button
                 key={size}
@@ -199,48 +183,42 @@ export default function DrawingCanvas({
                   if (el) sizeButtonsRef.current.set(size, el);
                 }}
                 onClick={() => setCurrentSize(size)}
-                className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${
-                  currentSize === size && !isEraser
-                    ? "border-blue-500 bg-blue-100"
-                    : "border-gray-300 bg-white"
-                } transition-all hover:scale-110`}
+                className={`w-8 h-8 border-2 border-black bg-white flex items-center justify-center ${
+                  currentSize === size ? "ring-2 ring-blue-500" : ""
+                }`}
               >
                 <div
-                  className="rounded-full bg-black"
-                  style={{ width: size * 2, height: size * 2 }}
+                  className="bg-black"
+                  style={{ 
+                    width: size * 2, 
+                    height: size * 2,
+                    imageRendering: "pixelated"
+                  }}
                 />
               </button>
             ))}
           </div>
 
-          <div className="w-px h-10 bg-gray-300" />
-
-          <button
-            ref={eraserButtonRef}
-            onClick={() => setIsEraser(true)}
-            className={`p-2 rounded-lg ${
-              isEraser ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"
-            } hover:scale-110 transition-all`}
-          >
-            <Eraser className="w-6 h-6" />
-          </button>
+          <div className="w-px h-8 bg-black" />
 
           <button
             ref={clearButtonRef}
             onClick={onClear}
-            className="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600 hover:scale-110 transition-all"
+            className="px-2 py-1 border-2 border-black bg-[#f44336] text-white text-xs hover:bg-[#d32f2f]"
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
           >
-            <Trash2 className="w-6 h-6" />
+            CLR
           </button>
         </div>
       )}
 
-      <div className="flex-1 relative bg-gray-50 rounded-xl overflow-hidden border-4 border-gray-200">
+      <div className="flex-1 relative bg-white border-2 border-black overflow-hidden">
         <canvas
           ref={canvasRef}
           width={1200}
           height={800}
           className="w-full h-full"
+          style={{ imageRendering: "pixelated" }}
         />
       </div>
     </div>

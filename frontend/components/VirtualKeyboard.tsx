@@ -61,21 +61,22 @@ export default function VirtualKeyboard({ hands, onInput, initialValue = "" }: V
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl p-6 space-y-4">
-      <div className="bg-gray-100 rounded-lg p-4 min-h-[60px] text-2xl font-bold text-gray-800 border-4 border-blue-300">
-        {value || <span className="text-gray-400">Type here...</span>}
+    <div className="bg-white border-4 border-black p-4 space-y-3">
+      <div className="bg-[#f0f0f0] border-3 border-black p-2 min-h-[50px] text-sm text-black break-all" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+        {value || <span className="text-gray-400">Type...</span>}
       </div>
 
       <div className="space-y-2">
         {keys.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex justify-center gap-2">
+          <div key={rowIndex} className="flex justify-center gap-1">
             {row.map((key) => (
               <button
                 key={key}
                 ref={(el) => {
                   if (el) keyRefs.current.set(key, el);
                 }}
-                className="w-14 h-14 bg-gradient-to-br from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 text-white font-bold text-xl rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                className="w-10 h-10 border-3 border-black bg-white hover:bg-gray-200 text-black text-xs active:translate-x-0.5 active:translate-y-0.5"
+                style={{ fontFamily: "'Press Start 2P', cursive" }}
                 onClick={() => handleKeyPress(key)}
               >
                 {key}
@@ -84,21 +85,23 @@ export default function VirtualKeyboard({ hands, onInput, initialValue = "" }: V
           </div>
         ))}
 
-        <div className="flex justify-center gap-2 mt-4">
+        <div className="flex justify-center gap-2 mt-2">
           <button
             ref={(el) => {
               if (el) keyRefs.current.set("BACK", el);
             }}
-            className="w-32 h-14 bg-gradient-to-br from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+            className="w-24 h-10 border-3 border-black bg-[#f44336] hover:bg-[#d32f2f] text-white text-xs active:translate-x-0.5 active:translate-y-0.5"
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
             onClick={() => handleKeyPress("BACK")}
           >
-            ← DELETE
+            DEL
           </button>
           <button
             ref={(el) => {
               if (el) keyRefs.current.set("SPACE", el);
             }}
-            className="w-64 h-14 bg-gradient-to-br from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+            className="w-48 h-10 border-3 border-black bg-[#9E9E9E] hover:bg-[#757575] text-white text-xs active:translate-x-0.5 active:translate-y-0.5"
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
             onClick={() => handleKeyPress("SPACE")}
           >
             SPACE

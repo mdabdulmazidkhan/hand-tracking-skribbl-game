@@ -1,4 +1,3 @@
-import { Users, Crown } from "lucide-react";
 import type { Player } from "../types";
 
 interface PlayerListProps {
@@ -11,41 +10,31 @@ export default function PlayerList({ players, currentDrawerId, playerId }: Playe
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
-    <div className="h-full bg-white rounded-2xl shadow-xl p-6 flex flex-col">
-      <div className="flex items-center gap-2 mb-6">
-        <Users className="w-6 h-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Players</h2>
-      </div>
+    <div className="h-full bg-white border-3 border-black p-3 flex flex-col">
+      <h2 className="text-xs mb-3 text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+        PLAYERS
+      </h2>
 
-      <div className="flex-1 space-y-3 overflow-y-auto">
+      <div className="flex-1 space-y-2 overflow-y-auto">
         {sortedPlayers.map((player, index) => (
           <div
             key={player.id}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              player.id === playerId
-                ? "bg-blue-50 border-blue-400"
-                : "bg-gray-50 border-gray-200"
-            } ${
-              player.id === currentDrawerId
-                ? "ring-4 ring-yellow-400"
-                : ""
-            }`}
+            className={`p-2 border-2 border-black ${
+              player.id === playerId ? "bg-[#e3f2fd]" : "bg-white"
+            } ${player.id === currentDrawerId ? "bg-yellow-200" : ""}`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                {index === 0 && <Crown className="w-5 h-5 text-yellow-500" />}
-                <span className="font-bold text-gray-800 truncate">
-                  {player.username}
-                </span>
-              </div>
-              {player.id === currentDrawerId && (
-                <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full font-bold">
-                  DRAWING
-                </span>
-              )}
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs truncate" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+                {index === 0 ? "★ " : ""}{player.username}
+              </span>
             </div>
-            <div className="text-2xl font-black text-blue-600">
-              {player.score} pts
+            {player.id === currentDrawerId && (
+              <div className="text-xs text-black mt-1" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+                DRAWING
+              </div>
+            )}
+            <div className="text-sm text-black mt-1" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+              {player.score}
             </div>
           </div>
         ))}

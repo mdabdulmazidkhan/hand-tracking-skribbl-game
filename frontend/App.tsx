@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./styles.css";
 import LandingPage from "./pages/LandingPage";
 import GameLobby from "./pages/GameLobby";
 import GameRoom from "./pages/GameRoom";
@@ -24,7 +25,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+    <div className="h-screen w-screen overflow-hidden bg-white">
       <HandTracker onHandsDetected={setHands} />
       <HandOverlay hands={hands} />
 

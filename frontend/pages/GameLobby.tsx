@@ -88,38 +88,46 @@ export default function GameLobby({
   };
 
   return (
-    <div className="h-full w-full flex items-center justify-center p-8">
+    <div className="h-full w-full flex items-center justify-center p-4 bg-[#f0f0f0]">
       {pointers.map((pointer, index) => (
         <HandCursor key={index} pointer={pointer} />
       ))}
 
-      <div className="max-w-4xl w-full space-y-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-6xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Game Lobby
-          </h1>
-          <div className="bg-white rounded-2xl shadow-xl p-6 inline-block">
-            <p className="text-gray-600 text-lg font-semibold">Room Code:</p>
-            <p className="text-5xl font-black text-blue-600 tracking-wider">{roomCode}</p>
+      <div className="max-w-2xl w-full space-y-4">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl mb-2 text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+            LOBBY
+          </h2>
+          <div className="bg-white border-4 border-black p-4 inline-block">
+            <p className="text-xs text-gray-600" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+              CODE:
+            </p>
+            <p className="text-3xl text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+              {roomCode}
+            </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-2xl p-8 space-y-6">
-          <h2 className="text-3xl font-bold text-gray-800">Players ({players.length})</h2>
+        <div className="bg-white border-4 border-black p-4 space-y-3">
+          <h3 className="text-xs mb-2 text-black" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+            PLAYERS ({players.length})
+          </h3>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             {players.map((player) => (
               <div
                 key={player.id}
-                className={`p-4 rounded-xl flex items-center justify-between ${
-                  player.isReady
-                    ? "bg-gradient-to-r from-green-100 to-blue-100 border-2 border-green-400"
-                    : "bg-gray-100 border-2 border-gray-300"
+                className={`p-3 border-3 border-black flex items-center justify-between ${
+                  player.isReady ? "bg-[#4CAF50] text-white" : "bg-white text-black"
                 }`}
               >
-                <span className="text-xl font-bold text-gray-800">{player.username}</span>
+                <span className="text-xs" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+                  {player.username}
+                </span>
                 {player.isReady && (
-                  <span className="text-green-600 font-bold text-lg">✓ Ready</span>
+                  <span className="text-xs" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+                    ✓
+                  </span>
                 )}
               </div>
             ))}
@@ -129,17 +137,18 @@ export default function GameLobby({
             ref={readyButtonRef}
             onClick={handleReady}
             disabled={isReady}
-            className={`w-full py-6 text-3xl font-bold rounded-2xl shadow-xl transition-all ${
+            className={`w-full py-4 border-4 border-black text-xs ${
               isReady
-                ? "bg-green-400 text-white cursor-not-allowed"
-                : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white hover:scale-105 active:scale-95"
+                ? "bg-[#4CAF50] text-white cursor-not-allowed"
+                : "bg-[#2196F3] text-white hover:bg-[#1976D2] active:translate-x-0.5 active:translate-y-0.5"
             }`}
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
           >
-            {isReady ? "✓ Ready!" : "Click to Ready"}
+            {isReady ? "READY!" : "READY?"}
           </button>
 
-          <p className="text-center text-gray-600 text-lg">
-            Waiting for all players to be ready...
+          <p className="text-center text-gray-600 text-xs pt-2" style={{ fontFamily: "'Press Start 2P', cursive" }}>
+            Wait for players...
           </p>
         </div>
       </div>
