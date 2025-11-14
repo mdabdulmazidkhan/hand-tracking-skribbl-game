@@ -48,17 +48,7 @@ export default function GameRoom({
   useEffect(() => {
     streamRef.current = stream;
 
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.close();
-      }
-    };
-  }, []);
-
-  // This component will receive messages via the parent's gameMessageHandler
-  // which is called from GameLobby's message loop
-  useEffect(() => {
-    // Export our message handler to parent via a global callback pattern
+    // Register handler IMMEDIATELY
     const handler = (message: ServerMessage) => {
       console.log("GameRoom received message:", message);
       if (message.playersUpdate) {
@@ -96,11 +86,15 @@ export default function GameRoom({
       }
     };
 
-    // Store handler in window for GameLobby to call
+    // Register BEFORE any async operations
     (window as any).__gameRoomMessageHandler = handler;
+    console.log("GameRoom: Handler registered!");
 
     return () => {
       delete (window as any).__gameRoomMessageHandler;
+      if (streamRef.current) {
+        streamRef.current.close();
+      }
     };
   }, []);
 
