@@ -43,6 +43,7 @@ export default function GameRoom({
   const customWordButtonRef = useRef<HTMLButtonElement>(null);
 
   const isDrawing = currentDrawerId === playerId;
+  const isMyTurn = currentDrawerId === playerId || (wordOptions.length > 0 && currentDrawerId === playerId);
 
   useEffect(() => {
     streamRef.current = stream;
@@ -305,7 +306,7 @@ export default function GameRoom({
         <DrawingCanvas
           hands={pointers}
           strokes={strokes}
-          isDrawing={isDrawing}
+          isDrawing={isMyTurn}
           onDrawStroke={handleDrawStroke}
           onClear={handleClearCanvas}
           playerId={playerId}
