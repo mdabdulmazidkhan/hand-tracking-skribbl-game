@@ -14,7 +14,6 @@ interface GameRoomProps {
   roomCode: string;
   username: string;
   playerId: string;
-  stream: any;
 }
 
 export default function GameRoom({
@@ -22,7 +21,6 @@ export default function GameRoom({
   roomCode,
   username,
   playerId,
-  stream: initialStream,
 }: GameRoomProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentDrawerId, setCurrentDrawerId] = useState<string | null>(null);
@@ -46,9 +44,7 @@ export default function GameRoom({
   const isDrawing = currentDrawerId === playerId;
 
   useEffect(() => {
-    // Use the stream passed from lobby
-    streamRef.current = initialStream;
-    listenToStream(initialStream);
+    connectToGame();
 
     return () => {
       if (streamRef.current) {
@@ -57,8 +53,11 @@ export default function GameRoom({
     };
   }, []);
 
-  const listenToStream = async (stream: any) => {
+  const connectToGame = async () => {
     try {
+      const stream = await backend.game.stream({ roomCode, playerId, username });
+      streamRef.current = stream;
+
       for await (const message of stream) {
         if (message.playersUpdate) {
           setPlayers(message.playersUpdate.players);
@@ -94,8 +93,8 @@ export default function GameRoom({
         }
       }
     } catch (err) {
-      console.error("Stream error:", err);
-      toast({ title: "Connection lost", variant: "destructive" });
+      console.error("Connection error:", err);
+      toast({ title: "Failed to connect", variant: "destructive" });
     }
   };
 

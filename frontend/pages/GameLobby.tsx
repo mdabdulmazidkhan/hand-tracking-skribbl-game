@@ -11,7 +11,7 @@ interface GameLobbyProps {
   roomCode: string;
   username: string;
   playerId: string;
-  onStartGame: (stream: any) => void;
+  onStartGame: () => void;
 }
 
 export default function GameLobby({
@@ -75,9 +75,12 @@ export default function GameLobby({
           setPlayers(message.playersUpdate.players);
           const allReady = message.playersUpdate.players.every((p: Player) => p.isReady);
           if (allReady && message.playersUpdate.players.length >= 2) {
-            // Pass the stream to the game room - don't close it
-            setTimeout(() => onStartGame(stream), 500);
-            break;
+            // Game starting - will reconnect in GameRoom
+            setTimeout(() => {
+              stream.close();
+              onStartGame();
+            }, 500);
+            return;
           }
         }
       }
