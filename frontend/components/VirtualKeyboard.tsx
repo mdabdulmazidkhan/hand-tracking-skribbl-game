@@ -9,6 +9,7 @@ interface VirtualKeyboardProps {
 }
 
 const keys = [
+  ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
   ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
   ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
   ["Z", "X", "C", "V", "B", "N", "M"],
@@ -26,6 +27,27 @@ export default function VirtualKeyboard({ hands, onInput, initialValue = "" }: V
   useEffect(() => {
     onInput(value);
   }, [value]);
+
+  // Physical keyboard support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        handleKeyPress("BACK");
+      } else if (e.key === " ") {
+        e.preventDefault();
+        handleKeyPress("SPACE");
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+      } else if (/^[a-zA-Z0-9]$/.test(e.key)) {
+        e.preventDefault();
+        handleKeyPress(e.key.toUpperCase());
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     hands.forEach((pointer, index) => {
