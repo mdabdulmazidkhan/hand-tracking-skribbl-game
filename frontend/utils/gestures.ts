@@ -7,8 +7,8 @@ export function detectPinch(landmarks: Array<{ x: number; y: number; z: number }
     Math.pow(thumb.y - index.y, 2)
   );
 
-  // Reduced to half - requires fingers much closer together
-  return distance < 0.075;
+  // Very tight pinch - fingers must be very close together
+  return distance < 0.03;
 }
 
 export function isPointerNear(
