@@ -64,6 +64,7 @@ export default function GameRoom({
         setPlayers(message.playersUpdate.players);
       } else if (message.wordSelection) {
         setWordOptions(message.wordSelection.words);
+        setCurrentDrawerId(message.wordSelection.drawerId);
       } else if (message.roundStart) {
         setCurrentDrawerId(message.roundStart.drawerId);
         setWordHint(message.roundStart.wordHint);

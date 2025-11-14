@@ -77,6 +77,7 @@ export interface ServerMessage {
   wordSelection?: {
     type: "word_selection";
     words: string[];
+    drawerId: string;
   };
   roundStart?: {
     type: "round_start";

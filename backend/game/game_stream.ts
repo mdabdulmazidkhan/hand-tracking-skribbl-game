@@ -216,6 +216,7 @@ async function startGame(roomCode: string): Promise<void> {
     wordSelection: {
       type: "word_selection",
       words: room.wordOptions,
+      drawerId: room.currentDrawerId!,
     },
   });
 
@@ -289,6 +290,7 @@ async function endRound(roomCode: string): Promise<void> {
         wordSelection: {
           type: "word_selection",
           words: currentRoom.wordOptions,
+          drawerId: currentRoom.currentDrawerId!,
         },
       });
 

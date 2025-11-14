@@ -77,6 +77,7 @@ export interface ChatMessageOut {
 export interface WordSelectionMessage {
   type: "word_selection";
   words: string[];
+  drawerId: string;
 }
 
 export interface RoundStartMessage {
