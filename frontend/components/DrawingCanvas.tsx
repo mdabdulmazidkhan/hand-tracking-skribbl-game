@@ -41,8 +41,6 @@ export default function DrawingCanvas({
   }, [strokes]);
 
   useEffect(() => {
-    if (!isDrawing) return;
-
     let currentHover: string | null = null;
     const now = Date.now();
 
@@ -85,7 +83,7 @@ export default function DrawingCanvas({
         const rect = clearButtonRef.current.getBoundingClientRect();
         if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
           currentHover = "clear";
-          if (canClick) {
+          if (canClick && isDrawing) {
             onClear();
             setLastClickTime((prev) => ({ ...prev, [handKey]: now }));
           }
@@ -96,15 +94,15 @@ export default function DrawingCanvas({
         const rect = undoButtonRef.current.getBoundingClientRect();
         if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
           currentHover = "undo";
-          if (canClick) {
+          if (canClick && isDrawing) {
             handleUndo();
             setLastClickTime((prev) => ({ ...prev, [handKey]: now }));
           }
         }
       }
 
-      // Drawing on canvas - only when NOT hovering over tools
-      if (isPinching && !currentHover && canvasRef.current) {
+      // Drawing on canvas - only when NOT hovering over tools AND isDrawing is true
+      if (isPinching && !currentHover && canvasRef.current && isDrawing) {
         const rect = canvasRef.current.getBoundingClientRect();
         const canvasX = ((pointer.x - rect.left) / rect.width) * 1200;
         const canvasY = ((pointer.y - rect.top) / rect.height) * 800;
