@@ -28,6 +28,7 @@ export default function DrawingCanvas({
   const [currentStroke, setCurrentStroke] = useState<Array<{ x: number; y: number }>>([]);
   const [lastPinchState, setLastPinchState] = useState<Record<string, boolean>>({});
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
+  const [lastClickTime, setLastClickTime] = useState<Record<string, number>>({});
 
   const colorButtonsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
   const sizeButtonsRef = useRef<Map<number, HTMLButtonElement>>(new Map());
@@ -42,11 +43,17 @@ export default function DrawingCanvas({
     if (!isDrawing) return;
 
     let currentHover: string | null = null;
+    const now = Date.now();
 
     hands.forEach((pointer, index) => {
       const handKey = `hand-${index}`;
       const wasPinching = lastPinchState[handKey];
       const isPinching = pointer.isPinching;
+      const lastClick = lastClickTime[handKey] || 0;
+      const timeSinceLastClick = now - lastClick;
+
+      // Debounce clicks - minimum 300ms between clicks
+      const canClick = !wasPinching && isPinching && timeSinceLastClick > 300;
 
       // Check if hovering over tools
       colorButtonsRef.current.forEach((button, color) => {
@@ -54,8 +61,9 @@ export default function DrawingCanvas({
         const rect = button.getBoundingClientRect();
         if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
           currentHover = `color-${color}`;
-          if (!wasPinching && isPinching) {
+          if (canClick) {
             setCurrentColor(color);
+            setLastClickTime((prev) => ({ ...prev, [handKey]: now }));
           }
         }
       });
@@ -65,8 +73,9 @@ export default function DrawingCanvas({
         const rect = button.getBoundingClientRect();
         if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
           currentHover = `size-${size}`;
-          if (!wasPinching && isPinching) {
+          if (canClick) {
             setCurrentSize(size);
+            setLastClickTime((prev) => ({ ...prev, [handKey]: now }));
           }
         }
       });
@@ -75,8 +84,9 @@ export default function DrawingCanvas({
         const rect = clearButtonRef.current.getBoundingClientRect();
         if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
           currentHover = "clear";
-          if (!wasPinching && isPinching) {
+          if (canClick) {
             onClear();
+            setLastClickTime((prev) => ({ ...prev, [handKey]: now }));
           }
         }
       }
@@ -85,14 +95,15 @@ export default function DrawingCanvas({
         const rect = undoButtonRef.current.getBoundingClientRect();
         if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
           currentHover = "undo";
-          if (!wasPinching && isPinching) {
+          if (canClick) {
             handleUndo();
+            setLastClickTime((prev) => ({ ...prev, [handKey]: now }));
           }
         }
       }
 
-      // Drawing on canvas
-      if (isPinching && canvasRef.current) {
+      // Drawing on canvas - only when NOT hovering over tools
+      if (isPinching && !currentHover && canvasRef.current) {
         const rect = canvasRef.current.getBoundingClientRect();
         const canvasX = ((pointer.x - rect.left) / rect.width) * 1200;
         const canvasY = ((pointer.y - rect.top) / rect.height) * 800;
@@ -197,7 +208,7 @@ export default function DrawingCanvas({
                 onClick={() => setCurrentColor(color)}
                 className={`w-8 h-8 border-2 border-black transition-transform ${
                   currentColor === color ? "ring-2 ring-blue-500" : ""
-                } ${hoveredTool === `color-${color}` ? "scale-110" : ""}`}
+                } ${hoveredTool === `color-${color}` ? "scale-125 shadow-lg" : ""}`}
                 style={{ backgroundColor: color }}
               />
             ))}
@@ -215,7 +226,7 @@ export default function DrawingCanvas({
                 onClick={() => setCurrentSize(size)}
                 className={`w-8 h-8 border-2 border-black bg-white flex items-center justify-center transition-transform ${
                   currentSize === size ? "ring-2 ring-blue-500" : ""
-                } ${hoveredTool === `size-${size}` ? "scale-110" : ""}`}
+                } ${hoveredTool === `size-${size}` ? "scale-125 shadow-lg" : ""}`}
               >
                 <div
                   className="bg-black rounded-full"
@@ -236,7 +247,7 @@ export default function DrawingCanvas({
             onClick={handleUndo}
             disabled={strokes.length === 0}
             className={`px-3 py-1 border-3 border-black bg-[#FF9800] text-white text-xs hover:bg-[#F57C00] transition-all disabled:bg-gray-300 disabled:cursor-not-allowed ${
-              hoveredTool === "undo" && strokes.length > 0 ? "scale-110 shadow-lg" : ""
+              hoveredTool === "undo" && strokes.length > 0 ? "scale-125 shadow-xl ring-2 ring-yellow-400" : ""
             }`}
             style={{ fontFamily: "'Press Start 2P', cursive" }}
           >
@@ -247,7 +258,7 @@ export default function DrawingCanvas({
             ref={clearButtonRef}
             onClick={onClear}
             className={`px-3 py-1 border-3 border-black bg-[#f44336] text-white text-xs hover:bg-[#d32f2f] transition-all ${
-              hoveredTool === "clear" ? "scale-110 shadow-lg" : ""
+              hoveredTool === "clear" ? "scale-125 shadow-xl ring-2 ring-yellow-400" : ""
             }`}
             style={{ fontFamily: "'Press Start 2P', cursive" }}
           >
