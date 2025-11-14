@@ -41,7 +41,7 @@ export default function HandTracker({ onHandsDetected }: HandTrackerProps) {
               results.multiHandLandmarks.map((landmarks, index) => ({
                 handedness: results.multiHandedness?.[index]?.label || "Unknown",
                 landmarks: landmarks.map((lm) => ({
-                  x: lm.x,
+                  x: 1 - lm.x,
                   y: lm.y,
                   z: lm.z || 0,
                 })),
