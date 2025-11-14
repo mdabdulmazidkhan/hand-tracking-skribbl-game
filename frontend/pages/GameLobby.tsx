@@ -87,8 +87,16 @@ export default function GameLobby({
           const allReady = message.playersUpdate.players.every((p: Player) => p.isReady);
           if (allReady && message.playersUpdate.players.length >= 2 && !gameStarted) {
             gameStarted = true;
+            // Transition to game room
             setTimeout(() => {
               onStartGame(stream, () => {});
+              // Wait for GameRoom to mount and register handler
+              setTimeout(() => {
+                const handler = (window as any).__gameRoomMessageHandler;
+                if (handler) {
+                  handler(message);
+                }
+              }, 100);
             }, 500);
           }
         }
