@@ -14,6 +14,7 @@ interface GameRoomProps {
   roomCode: string;
   username: string;
   playerId: string;
+  stream: any;
 }
 
 export default function GameRoom({
@@ -21,6 +22,7 @@ export default function GameRoom({
   roomCode,
   username,
   playerId,
+  stream: initialStream,
 }: GameRoomProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentDrawerId, setCurrentDrawerId] = useState<string | null>(null);
@@ -44,7 +46,9 @@ export default function GameRoom({
   const isDrawing = currentDrawerId === playerId;
 
   useEffect(() => {
-    connectToGame();
+    // Use the stream passed from lobby
+    streamRef.current = initialStream;
+    listenToStream(initialStream);
 
     return () => {
       if (streamRef.current) {
@@ -52,6 +56,48 @@ export default function GameRoom({
       }
     };
   }, []);
+
+  const listenToStream = async (stream: any) => {
+    try {
+      for await (const message of stream) {
+        if (message.playersUpdate) {
+          setPlayers(message.playersUpdate.players);
+        } else if (message.wordSelection) {
+          setWordOptions(message.wordSelection.words);
+        } else if (message.roundStart) {
+          setCurrentDrawerId(message.roundStart.drawerId);
+          setWordHint(message.roundStart.wordHint);
+          setWordOptions([]);
+          setStrokes([]);
+          setTimeRemaining(message.roundStart.duration / 1000);
+          const interval = setInterval(() => {
+            setTimeRemaining((prev) => Math.max(0, prev - 1));
+          }, 1000);
+          setTimeout(() => clearInterval(interval), message.roundStart.duration);
+        } else if (message.draw) {
+          setStrokes((prev) => [...prev, message.draw!.stroke]);
+        } else if (message.chat) {
+          setMessages((prev) => [...prev, message.chat!.message]);
+        } else if (message.clearCanvas) {
+          setStrokes([]);
+        } else if (message.correctGuess) {
+          toast({
+            title: `${message.correctGuess.username} guessed!`,
+            className: "bg-green-500 text-white",
+          });
+        } else if (message.roundEnd) {
+          toast({ title: `Word: ${message.roundEnd.word}` });
+        } else if (message.gameEnd) {
+          setGameEnded(true);
+          setFinalScores(message.gameEnd.finalScores);
+          toast({ title: "Game Over!" });
+        }
+      }
+    } catch (err) {
+      console.error("Stream error:", err);
+      toast({ title: "Connection lost", variant: "destructive" });
+    }
+  };
 
   // Handle word selection gestures
   useEffect(() => {
@@ -91,51 +137,6 @@ export default function GameRoom({
 
     setHoveredWord(currentHover);
   }, [pointers, wordOptions, isDrawing, customWord]);
-
-  const connectToGame = async () => {
-    try {
-      const stream = await backend.game.stream({ roomCode, playerId, username });
-      streamRef.current = stream;
-
-      for await (const message of stream) {
-        if (message.playersUpdate) {
-          setPlayers(message.playersUpdate.players);
-        } else if (message.wordSelection) {
-          setWordOptions(message.wordSelection.words);
-        } else if (message.roundStart) {
-          setCurrentDrawerId(message.roundStart.drawerId);
-          setWordHint(message.roundStart.wordHint);
-          setWordOptions([]);
-          setStrokes([]);
-          setTimeRemaining(message.roundStart.duration / 1000);
-          const interval = setInterval(() => {
-            setTimeRemaining((prev) => Math.max(0, prev - 1));
-          }, 1000);
-          setTimeout(() => clearInterval(interval), message.roundStart.duration);
-        } else if (message.draw) {
-          setStrokes((prev) => [...prev, message.draw!.stroke]);
-        } else if (message.chat) {
-          setMessages((prev) => [...prev, message.chat!.message]);
-        } else if (message.clearCanvas) {
-          setStrokes([]);
-        } else if (message.correctGuess) {
-          toast({
-            title: `${message.correctGuess.username} guessed!`,
-            className: "bg-green-500 text-white",
-          });
-        } else if (message.roundEnd) {
-          toast({ title: `Word: ${message.roundEnd.word}` });
-        } else if (message.gameEnd) {
-          setGameEnded(true);
-          setFinalScores(message.gameEnd.finalScores);
-          toast({ title: "Game Over!" });
-        }
-      }
-    } catch (err) {
-      console.error("Connection error:", err);
-      toast({ title: "Failed to connect", variant: "destructive" });
-    }
-  };
 
   const handleDrawStroke = async (stroke: DrawStroke) => {
     if (!streamRef.current || !isDrawing) return;
