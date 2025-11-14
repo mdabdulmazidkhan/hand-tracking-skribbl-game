@@ -28,10 +28,13 @@ export default function GameRoom({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [hoveredWord, setHoveredWord] = useState<string | null>(null);
   
   const streamRef = useRef<any>(null);
   const pointers = useHandPointers(hands);
   const { toast } = useToast();
+  const [lastPinchState, setLastPinchState] = useState<Record<string, boolean>>({});
+  const wordButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   const isDrawing = currentDrawerId === playerId;
 
@@ -44,6 +47,34 @@ export default function GameRoom({
       }
     };
   }, []);
+
+  // Handle word selection gestures
+  useEffect(() => {
+    if (wordOptions.length === 0 || !isDrawing) return;
+
+    let currentHover: string | null = null;
+
+    pointers.forEach((pointer, index) => {
+      const handKey = `hand-${index}`;
+      const wasPinching = lastPinchState[handKey];
+      const isPinching = pointer.isPinching;
+
+      wordButtonRefs.current.forEach((button, word) => {
+        if (!button) return;
+        const rect = button.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = word;
+          if (!wasPinching && isPinching) {
+            handleSelectWord(word);
+          }
+        }
+      });
+
+      setLastPinchState((prev) => ({ ...prev, [handKey]: isPinching }));
+    });
+
+    setHoveredWord(currentHover);
+  }, [pointers, wordOptions, isDrawing]);
 
   const connectToGame = async () => {
     try {
@@ -153,8 +184,13 @@ export default function GameRoom({
               {wordOptions.map((word) => (
                 <button
                   key={word}
+                  ref={(el) => {
+                    if (el) wordButtonRefs.current.set(word, el);
+                  }}
                   onClick={() => handleSelectWord(word)}
-                  className="flex-1 py-2 bg-[#2196F3] hover:bg-[#1976D2] text-white text-xs border-3 border-black active:translate-x-0.5 active:translate-y-0.5"
+                  className={`flex-1 py-2 text-white text-xs border-3 border-black active:translate-x-0.5 active:translate-y-0.5 transition-all ${
+                    hoveredWord === word ? "bg-[#42A5F5] scale-105 shadow-lg" : "bg-[#2196F3]"
+                  }`}
                   style={{ fontFamily: "'Press Start 2P', cursive" }}
                 >
                   {word}

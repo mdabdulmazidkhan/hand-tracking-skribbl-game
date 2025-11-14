@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState } from "react";
 import type { HandPointer, DrawStroke } from "../types";
-import { isPointerNear } from "../utils/gestures";
 
 interface DrawingCanvasProps {
   hands: HandPointer[];
@@ -28,6 +27,7 @@ export default function DrawingCanvas({
   const [isCurrentlyDrawing, setIsCurrentlyDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<Array<{ x: number; y: number }>>([]);
   const [lastPinchState, setLastPinchState] = useState<Record<string, boolean>>({});
+  const [hoveredTool, setHoveredTool] = useState<string | null>(null);
 
   const colorButtonsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
   const sizeButtonsRef = useRef<Map<number, HTMLButtonElement>>(new Map());
@@ -40,26 +40,58 @@ export default function DrawingCanvas({
   useEffect(() => {
     if (!isDrawing) return;
 
+    let currentHover: string | null = null;
+
     hands.forEach((pointer, index) => {
       const handKey = `hand-${index}`;
       const wasPinching = lastPinchState[handKey];
       const isPinching = pointer.isPinching;
 
-      if (!wasPinching && isPinching) {
-        handleToolClick(pointer.x, pointer.y);
+      // Check if hovering over tools
+      colorButtonsRef.current.forEach((button, color) => {
+        if (!button) return;
+        const rect = button.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = `color-${color}`;
+          if (!wasPinching && isPinching) {
+            setCurrentColor(color);
+          }
+        }
+      });
+
+      sizeButtonsRef.current.forEach((button, size) => {
+        if (!button) return;
+        const rect = button.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = `size-${size}`;
+          if (!wasPinching && isPinching) {
+            setCurrentSize(size);
+          }
+        }
+      });
+
+      if (clearButtonRef.current) {
+        const rect = clearButtonRef.current.getBoundingClientRect();
+        if (pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom) {
+          currentHover = "clear";
+          if (!wasPinching && isPinching) {
+            onClear();
+          }
+        }
       }
 
+      // Drawing on canvas
       if (isPinching && canvasRef.current) {
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = pointer.x - rect.left;
-        const y = pointer.y - rect.top;
+        const canvasX = ((pointer.x - rect.left) / rect.width) * 1200;
+        const canvasY = ((pointer.y - rect.top) / rect.height) * 800;
 
-        if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+        if (canvasX >= 0 && canvasX <= 1200 && canvasY >= 0 && canvasY <= 800) {
           if (!isCurrentlyDrawing) {
             setIsCurrentlyDrawing(true);
-            setCurrentStroke([{ x, y }]);
+            setCurrentStroke([{ x: canvasX, y: canvasY }]);
           } else {
-            setCurrentStroke((prev) => [...prev, { x, y }]);
+            setCurrentStroke((prev) => [...prev, { x: canvasX, y: canvasY }]);
           }
         }
       } else if (!isPinching && isCurrentlyDrawing) {
@@ -77,32 +109,9 @@ export default function DrawingCanvas({
 
       setLastPinchState((prev) => ({ ...prev, [handKey]: isPinching }));
     });
+
+    setHoveredTool(currentHover);
   }, [hands, isDrawing, currentColor, currentSize, isCurrentlyDrawing, currentStroke]);
-
-  const handleToolClick = (x: number, y: number) => {
-    colorButtonsRef.current.forEach((button, color) => {
-      if (!button) return;
-      const rect = button.getBoundingClientRect();
-      if (isPointerNear(x, y, rect.left + rect.width / 2, rect.top + rect.height / 2, 30)) {
-        setCurrentColor(color);
-      }
-    });
-
-    sizeButtonsRef.current.forEach((button, size) => {
-      if (!button) return;
-      const rect = button.getBoundingClientRect();
-      if (isPointerNear(x, y, rect.left + rect.width / 2, rect.top + rect.height / 2, 30)) {
-        setCurrentSize(size);
-      }
-    });
-
-    if (clearButtonRef.current) {
-      const rect = clearButtonRef.current.getBoundingClientRect();
-      if (isPointerNear(x, y, rect.left + rect.width / 2, rect.top + rect.height / 2, 40)) {
-        onClear();
-      }
-    }
-  };
 
   const redrawCanvas = () => {
     const canvas = canvasRef.current;
@@ -165,9 +174,9 @@ export default function DrawingCanvas({
                   if (el) colorButtonsRef.current.set(color, el);
                 }}
                 onClick={() => setCurrentColor(color)}
-                className={`w-8 h-8 border-2 border-black ${
+                className={`w-8 h-8 border-2 border-black transition-transform ${
                   currentColor === color ? "ring-2 ring-blue-500" : ""
-                }`}
+                } ${hoveredTool === `color-${color}` ? "scale-110" : ""}`}
                 style={{ backgroundColor: color }}
               />
             ))}
@@ -183,12 +192,12 @@ export default function DrawingCanvas({
                   if (el) sizeButtonsRef.current.set(size, el);
                 }}
                 onClick={() => setCurrentSize(size)}
-                className={`w-8 h-8 border-2 border-black bg-white flex items-center justify-center ${
+                className={`w-8 h-8 border-2 border-black bg-white flex items-center justify-center transition-transform ${
                   currentSize === size ? "ring-2 ring-blue-500" : ""
-                }`}
+                } ${hoveredTool === `size-${size}` ? "scale-110" : ""}`}
               >
                 <div
-                  className="bg-black"
+                  className="bg-black rounded-full"
                   style={{ 
                     width: size * 2, 
                     height: size * 2,
@@ -204,7 +213,9 @@ export default function DrawingCanvas({
           <button
             ref={clearButtonRef}
             onClick={onClear}
-            className="px-2 py-1 border-2 border-black bg-[#f44336] text-white text-xs hover:bg-[#d32f2f]"
+            className={`px-2 py-1 border-2 border-black bg-[#f44336] text-white text-xs hover:bg-[#d32f2f] transition-transform ${
+              hoveredTool === "clear" ? "scale-110" : ""
+            }`}
             style={{ fontFamily: "'Press Start 2P', cursive" }}
           >
             CLR
@@ -217,8 +228,8 @@ export default function DrawingCanvas({
           ref={canvasRef}
           width={1200}
           height={800}
-          className="w-full h-full"
-          style={{ imageRendering: "pixelated" }}
+          className="w-full h-full cursor-crosshair"
+          style={{ imageRendering: "auto" }}
         />
       </div>
     </div>
