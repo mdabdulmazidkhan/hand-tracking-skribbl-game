@@ -3,6 +3,7 @@ import LandingPage from "./pages/LandingPage";
 import GameLobby from "./pages/GameLobby";
 import GameRoom from "./pages/GameRoom";
 import HandTracker from "./components/HandTracker";
+import HandOverlay from "./components/HandOverlay";
 import type { HandLandmarks } from "./types";
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
       <HandTracker onHandsDetected={setHands} />
+      <HandOverlay hands={hands} />
 
       {page === "landing" && (
         <LandingPage hands={hands} onJoinRoom={handleJoinRoom} />
